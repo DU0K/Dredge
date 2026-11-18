@@ -5,12 +5,17 @@ public class InputManager : MonoBehaviour
 {
     [SerializeField] private InputActionAsset inputActionAsset;
     //GUI
-    private InputActionMap GUIInputActionMap;
-    private InputAction select;
+    protected InputActionMap GUIInputActionMap;
+    protected InputAction select;
     //Boat
-    private InputActionMap boatInputActionMap;
-    private InputAction move;
-    private InputAction fish;
+    protected InputActionMap boatInputActionMap;
+    protected InputAction move;
+    protected InputAction fish;
+
+    private void OnDisable()
+    {
+        GUIInputActionMap.Disable();
+    }
 
     private void Start()
     {
@@ -20,5 +25,7 @@ public class InputManager : MonoBehaviour
         boatInputActionMap = inputActionAsset.FindActionMap("Boat");
         move = boatInputActionMap.FindAction("Move");
         fish = boatInputActionMap.FindAction("Fish");
+
+        GUIInputActionMap.Enable();
     }
 }
