@@ -7,6 +7,7 @@ public class InputManager : MonoBehaviour
     //GUI
     protected InputActionMap GUIInputActionMap;
     protected InputAction select;
+    protected InputAction hook;
     //Boat
     protected InputActionMap boatInputActionMap;
     protected InputAction move;
@@ -21,6 +22,7 @@ public class InputManager : MonoBehaviour
     {
         GUIInputActionMap = inputActionAsset.FindActionMap("GUI");
         select = GUIInputActionMap.FindAction("Select");
+        hook = GUIInputActionMap.FindAction("Hook");
 
         boatInputActionMap = inputActionAsset.FindActionMap("Boat");
         move = boatInputActionMap.FindAction("Move");

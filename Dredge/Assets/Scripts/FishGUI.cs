@@ -3,51 +3,77 @@ using System.Collections;
 
 public class FishGUI : InputManager
 {
-    [SerializeField] private RectTransform fishInterface;
+    [SerializeField] private Transform canvasParent;
+    [SerializeField] private GameObject fishInterfacePreFab;
+    GameObject fishInterfaceIntstance;
     [SerializeField] private RectTransform inventory;
 
     [SerializeField] private float speed = 5;
 
     private bool GUIIsActive = false;
 
+    private Coroutine guiTransitionRoutine;
+
     private void Update()
     {
         if (fish.WasPressedThisFrame())
         {
             SwitchActionMap();
-            switchGUI();
+
+            if (!GUIIsActive)
+            {
+                if (fishInterfaceIntstance != null)
+                {
+                    Destroy(fishInterfaceIntstance);
+                }
+                fishInterfaceIntstance = Instantiate(fishInterfacePreFab, canvasParent, false);
+                StartTransition(fishInterfaceIntstance.GetComponent<RectTransform>(), 1, -1);
+                GUIIsActive = true;
+            }
+            else
+            {
+                GUIIsActive = false;
+                if (fishInterfaceIntstance != null)
+                {
+                    StartTransition(fishInterfaceIntstance.GetComponent<RectTransform>(), -1, 1);
+                }
+            }
         }
     }
+
+    private void StartTransition(RectTransform fishRect, int fishDir, int inventoryDir)
+    {
+        if (guiTransitionRoutine != null)
+        {
+            StopCoroutine(guiTransitionRoutine);
+        }
+        guiTransitionRoutine = StartCoroutine(RunBothTransitions(fishRect, fishDir, inventoryDir));
+    }
+
+    private IEnumerator RunBothTransitions(RectTransform fishRect, int fishDir, int inventoryDir)
+    {
+        StartCoroutine(switchGUI(fishRect, fishDir));
+        yield return StartCoroutine(switchGUI(inventory, inventoryDir));
+        if (fishDir == -1 && fishInterfaceIntstance != null)
+        {
+            Destroy(fishInterfaceIntstance);
+            fishInterfaceIntstance = null;
+        }
+    }
+
 
     public void SwitchActionMap()
     {
         if (GUIInputActionMap.enabled)
         {
-            boatInputActionMap.Enable();
+            GUIInputActionMap.Enable();
         }
         else
         {
-            boatInputActionMap.Disable();
+            GUIInputActionMap.Disable();
         }
     }
-
-    public void switchGUI()
-    {
-        if (GUIIsActive == true)
-        {
-            GUIIsActive = false;
-            StartCoroutine(FoldUp(fishInterface, 1));
-            StartCoroutine(FoldUp(inventory, -1));
-        }
-        else
-        {
-            GUIIsActive = true;
-            StartCoroutine(FoldUp(fishInterface, -1));
-            StartCoroutine(FoldUp(inventory, 1));
-        }
-    }
-
-    private IEnumerator FoldUp(RectTransform _ui, int richting)
+    private IEnumerator switchGUI(RectTransform _ui, int richting)
     {
         float startX = _ui.anchoredPosition.x;
         float targetX = startX + (_ui.rect.width * richting);
