@@ -15,9 +15,8 @@ public class QuickTimeEvent : InputManager
     private float zoneStartAngle;
     private float zoneEndAngle;
     private float currentAngle;
-    bool overlapping = false;
 
-    List <Vector2> targetPositions = new List<Vector2>();
+    List<Vector2> targetPositions = new List<Vector2>();
 
     public event Action onHook;
 
@@ -30,8 +29,7 @@ public class QuickTimeEvent : InputManager
 
         currentAngle = (currentAngle + speed * Time.deltaTime) % 360f;
         trigger.localEulerAngles = new Vector3(0f, 0f, -currentAngle);
-
-        if (hook.WasPressedThisFrame() && CheckForOverlap(zoneStartAngle, zoneEndAngle))
+        if (hook.WasPressedThisFrame() && CheckForOverlap(currentAngle, currentAngle))
         {
             onHook?.Invoke();
         }
@@ -45,7 +43,6 @@ public class QuickTimeEvent : InputManager
         zoneStartAngle = UnityEngine.Random.Range(60f, 340f - zoneArcDegrees);
         zoneEndAngle = zoneStartAngle + zoneArcDegrees;
 
-        
         if (!CheckForOverlap(zoneStartAngle, zoneEndAngle))
         {
             targetPositions.Add(new Vector2(zoneStartAngle, zoneEndAngle));
@@ -55,16 +52,15 @@ public class QuickTimeEvent : InputManager
 
     private bool CheckForOverlap(float positionA, float positionB)
     {
-        for (int i = 0; i < targetPositions.Count - 1; i++)
+        for (int i = 0; i < targetPositions.Count; i++)
         {
             float existingStartTargetAngle = targetPositions[i].x;
             float existingEndTargetAngle = targetPositions[i].y;
             if (positionA < existingEndTargetAngle && positionB > existingStartTargetAngle)
             {
-                overlapping = true;
-                break;
+                return true;
             }
         }
-        return overlapping;
+        return false;
     }
 }

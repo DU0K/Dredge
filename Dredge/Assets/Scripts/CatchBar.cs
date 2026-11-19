@@ -11,8 +11,6 @@ public class CatchBar : MonoBehaviour
 
     private float maxY;
 
-    public event Action reset;
-
     private void OnDisable()
     {
         quickTimeEvent.onHook -= boostHook;
@@ -29,7 +27,7 @@ public class CatchBar : MonoBehaviour
     {
         if (hook.anchoredPosition.y >= maxY)
         {
-            //Instantiate fish item to place in inventory
+            //Instantiate fish item to place in inventoryWorld
         }
         else
         {
