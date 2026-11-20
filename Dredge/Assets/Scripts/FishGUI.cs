@@ -1,88 +1,120 @@
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class FishGUI : InputManager
 {
     [SerializeField] private Transform canvasParent;
-    [SerializeField] private GameObject fishInterfacePreFab;
-    GameObject fishInterfaceIntstance;
+    [SerializeField] private GameObject fishInterfacePrefab;
     [SerializeField] private RectTransform inventory;
+    [SerializeField] private float speed = 5f;
 
-    [SerializeField] private float speed = 5;
-
-    private bool GUIIsActive = false;
+    private GameObject fishInterfaceInstance;
+    private RectTransform fishInterfaceRect;
+    private bool guiIsActive;
 
     private Coroutine guiTransitionRoutine;
+    private Coroutine fishRoutine;
+    private Coroutine inventoryRoutine;
 
     private void Update()
     {
-        if (fish.WasPressedThisFrame())
+        if (!fish.WasPressedThisFrame())
         {
-            SwitchActionMap();
+            return;
+        }
 
-            if (!GUIIsActive)
+        ToggleGUI();
+    }
+
+    public void ToggleGUI()
+    {
+        SetGUIState(!guiIsActive);
+    }
+
+    public void SetGUIState(bool open)
+    {
+        if (guiIsActive == open)
+        {
+            return;
+        }
+
+        SwitchActionMap();
+        guiIsActive = open;
+
+        if (guiIsActive)
+        {
+            if (fishInterfaceInstance != null)
             {
-                if (fishInterfaceIntstance != null)
-                {
-                    Destroy(fishInterfaceIntstance);
-                }
-                fishInterfaceIntstance = Instantiate(fishInterfacePreFab, canvasParent, false);
-                StartTransition(fishInterfaceIntstance.GetComponent<RectTransform>(), 1, -1);
-                GUIIsActive = true;
+                Destroy(fishInterfaceInstance);
             }
-            else
-            {
-                GUIIsActive = false;
-                if (fishInterfaceIntstance != null)
-                {
-                    StartTransition(fishInterfaceIntstance.GetComponent<RectTransform>(), -1, 1);
-                }
-            }
+
+            fishInterfaceInstance = Instantiate(fishInterfacePrefab, canvasParent, false);
+            fishInterfaceRect = fishInterfaceInstance.GetComponent<RectTransform>();
+            StartTransition(fishInterfaceRect, 1, -1);
+        }
+        else if (fishInterfaceInstance != null)
+        {
+            StartTransition(fishInterfaceRect, -1, 1);
         }
     }
 
     private void StartTransition(RectTransform fishRect, int fishDir, int inventoryDir)
     {
-        if (guiTransitionRoutine != null)
-        {
-            StopCoroutine(guiTransitionRoutine);
-        }
+        StopActiveCoroutines();
         guiTransitionRoutine = StartCoroutine(RunBothTransitions(fishRect, fishDir, inventoryDir));
+    }
+
+    private void StopActiveCoroutines()
+    {
+        if (guiTransitionRoutine != null) StopCoroutine(guiTransitionRoutine);
+        if (fishRoutine != null) StopCoroutine(fishRoutine);
+        if (inventoryRoutine != null) StopCoroutine(inventoryRoutine);
     }
 
     private IEnumerator RunBothTransitions(RectTransform fishRect, int fishDir, int inventoryDir)
     {
-        StartCoroutine(switchGUI(fishRect, fishDir));
-        yield return StartCoroutine(switchGUI(inventory, inventoryDir));
-        if (fishDir == -1 && fishInterfaceIntstance != null)
+        fishRoutine = StartCoroutine(SwitchGUI(fishRect, fishDir));
+        inventoryRoutine = StartCoroutine(SwitchGUI(inventory, inventoryDir));
+
+        yield return inventoryRoutine;
+
+        if (fishDir == -1 && fishInterfaceInstance != null)
         {
-            Destroy(fishInterfaceIntstance);
-            fishInterfaceIntstance = null;
+            Destroy(fishInterfaceInstance);
+            fishInterfaceInstance = null;
+            fishInterfaceRect = null;
         }
     }
-
 
     public void SwitchActionMap()
     {
         if (GUIInputActionMap.enabled)
         {
-            GUIInputActionMap.Enable();
+            GUIInputActionMap.Disable();
         }
         else
         {
-            GUIInputActionMap.Disable();
+            GUIInputActionMap.Enable();
         }
     }
-    private IEnumerator switchGUI(RectTransform _ui, int richting)
+
+    private IEnumerator SwitchGUI(RectTransform uiElement, int richting)
     {
-        float startX = _ui.anchoredPosition.x;
-        float targetX = startX + (_ui.rect.width * richting);
-        while (!Mathf.Approximately(_ui.anchoredPosition.x, targetX))
+        if (uiElement == null) yield break;
+
+        float startX = uiElement.anchoredPosition.x;
+        float targetX = startX + (uiElement.rect.width * richting);
+
+        while (uiElement != null && !Mathf.Approximately(uiElement.anchoredPosition.x, targetX))
         {
-            float newX = Mathf.MoveTowards(_ui.anchoredPosition.x, targetX, speed * Time.deltaTime);
-            _ui.anchoredPosition = new Vector2(newX, _ui.anchoredPosition.y);
+            float newX = Mathf.MoveTowards(uiElement.anchoredPosition.x, targetX, speed * Time.deltaTime);
+            uiElement.anchoredPosition = new Vector2(newX, uiElement.anchoredPosition.y);
             yield return null;
         }
-        _ui.anchoredPosition = new Vector2(targetX, _ui.anchoredPosition.y);
+
+        if (uiElement != null)
+        {
+            uiElement.anchoredPosition = new Vector2(targetX, uiElement.anchoredPosition.y);
+        }
     }
 }

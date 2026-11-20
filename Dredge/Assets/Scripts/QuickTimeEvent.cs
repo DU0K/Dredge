@@ -7,10 +7,8 @@ public class QuickTimeEvent : InputManager
 {
     [SerializeField] private RectTransform trigger;
     [SerializeField] private GameObject target;
-    [SerializeField] private int ammount = 4;
-    [SerializeField] private float minZoneFill;
-    [SerializeField] private float maxZoneFill;
-    [SerializeField] private float speed = 5f;
+
+    private FishManager fishManager;
 
     private float zoneStartAngle;
     private float zoneEndAngle;
@@ -20,14 +18,19 @@ public class QuickTimeEvent : InputManager
 
     public event Action onHook;
 
+    private void Start()
+    {
+        fishManager = FindAnyObjectByType<FishManager>();
+    }
+
     private void Update()
     {
-        if (targetPositions.Count < ammount)
+        if (targetPositions.Count < fishManager._fish[0].Locations.Length)
         {
             AddRandomTarget();
         }
 
-        currentAngle = (currentAngle + speed * Time.deltaTime) % 360f;
+        currentAngle = (currentAngle + fishManager._fish[0].speed * Time.deltaTime) % 360f;
         trigger.localEulerAngles = new Vector3(0f, 0f, -currentAngle);
         if (hook.WasPressedThisFrame() && CheckForOverlap(currentAngle, currentAngle))
         {
@@ -37,18 +40,25 @@ public class QuickTimeEvent : InputManager
 
     private void AddRandomTarget()
     {
-        float fill = UnityEngine.Random.Range(minZoneFill, maxZoneFill);
-        float zoneArcDegrees = fill * 360f;
+        int index = targetPositions.Count;
+        currentQTE = fishManager._fish[0].Locations[index];
 
-        zoneStartAngle = UnityEngine.Random.Range(60f, 340f - zoneArcDegrees);
-        zoneEndAngle = zoneStartAngle + zoneArcDegrees;
+        zoneStartAngle = currentQTE.location;
+        zoneEndAngle = zoneStartAngle + currentQTE.size;
 
         if (!CheckForOverlap(zoneStartAngle, zoneEndAngle))
         {
             targetPositions.Add(new Vector2(zoneStartAngle, zoneEndAngle));
-            Instantiate(target, transform.position, Quaternion.Euler(0f, 0f, -zoneStartAngle), transform).GetComponent<Image>().fillAmount = fill;
+
+            Instantiate(target, transform.position, Quaternion.Euler(0f, 0f, -zoneStartAngle), transform)
+                .GetComponent<Image>().fillAmount = currentQTE.size / 360f;
+        }
+        else
+        {
+            targetPositions.Add(Vector2.zero);
         }
     }
+
 
     private bool CheckForOverlap(float positionA, float positionB)
     {

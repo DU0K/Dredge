@@ -9,6 +9,8 @@ public class CatchBar : MonoBehaviour
 
     private QuickTimeEvent quickTimeEvent;
 
+    private FishGUI fishGUI;
+
     private float maxY;
 
     private void OnDisable()
@@ -18,6 +20,7 @@ public class CatchBar : MonoBehaviour
 
     private void Start()
     {
+        fishGUI = FindAnyObjectByType<FishGUI>();
         quickTimeEvent = FindAnyObjectByType<QuickTimeEvent>();
         quickTimeEvent.onHook += boostHook;
         RectTransform parentRect = hook.parent as RectTransform;
@@ -28,6 +31,8 @@ public class CatchBar : MonoBehaviour
         if (hook.anchoredPosition.y >= maxY)
         {
             //Instantiate fish item to place in inventoryWorld
+
+            fishGUI.SetGUIState(false);
         }
         else
         {
