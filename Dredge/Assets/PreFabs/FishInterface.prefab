@@ -402,7 +402,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuickTimeEvent
   inputActionAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  fish: []
   trigger: {fileID: 2080408115669270992}
   target: {fileID: 3804323654804038556, guid: 5d002b39c987aec4a99f724a6ab6d5ff, type: 3}
 --- !u!222 &1344760741952676155

@@ -9,6 +9,7 @@ public class QuickTimeEvent : InputManager
     [SerializeField] private GameObject target;
 
     private FishManager fishManager;
+    private FishManager.QTELocation currentQTE;
 
     private float zoneStartAngle;
     private float zoneEndAngle;
@@ -20,8 +21,10 @@ public class QuickTimeEvent : InputManager
 
     private void Start()
     {
+        base.Start();
         fishManager = FindAnyObjectByType<FishManager>();
     }
+
 
     private void Update()
     {
