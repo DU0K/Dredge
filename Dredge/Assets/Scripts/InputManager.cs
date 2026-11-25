@@ -18,7 +18,7 @@ public class InputManager : MonoBehaviour
         GUIInputActionMap.Disable();
     }
 
-    private void Start()
+    protected virtual void Start()
     {
         GUIInputActionMap = inputActionAsset.FindActionMap("GUI");
         select = GUIInputActionMap.FindAction("Select");

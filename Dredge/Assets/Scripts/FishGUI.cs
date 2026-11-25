@@ -3,26 +3,35 @@ using UnityEngine;
 
 public class FishGUI : InputManager
 {
-    [SerializeField] private Transform canvasParent;
-    [SerializeField] private GameObject fishInterfacePrefab;
+    [SerializeField] private RectTransform fishInterfaceRect;
     [SerializeField] private RectTransform inventory;
-    [SerializeField] private float speed = 5f;
+    [SerializeField] private float speed = 500f;
 
-    private GameObject fishInterfaceInstance;
-    private RectTransform fishInterfaceRect;
     private bool guiIsActive;
-
     private Coroutine guiTransitionRoutine;
-    private Coroutine fishRoutine;
-    private Coroutine inventoryRoutine;
+
+    private float inventoryOpenX;
+    private float inventoryClosedX;
+    private float fishOpenX;
+    private float fishClosedX;
+
+    private void Awake()
+    {
+        inventoryOpenX = inventory.anchoredPosition.x;
+        inventoryClosedX = inventoryOpenX + inventory.rect.width;
+
+        fishOpenX = fishInterfaceRect.anchoredPosition.x;
+        fishClosedX = fishOpenX - fishInterfaceRect.rect.width;
+
+        fishInterfaceRect.anchoredPosition = new Vector2(fishClosedX, fishInterfaceRect.anchoredPosition.y);
+        inventory.anchoredPosition = new Vector2(inventoryClosedX, inventory.anchoredPosition.y);
+
+        SetPanelsActive(false);
+    }
 
     private void Update()
     {
-        if (!fish.WasPressedThisFrame())
-        {
-            return;
-        }
-
+        if (!fish.WasPressedThisFrame()) return;
         ToggleGUI();
     }
 
@@ -33,57 +42,62 @@ public class FishGUI : InputManager
 
     public void SetGUIState(bool open)
     {
-        if (guiIsActive == open)
-        {
-            return;
-        }
+        if (guiIsActive == open) return;
 
         SwitchActionMap();
         guiIsActive = open;
 
         if (guiIsActive)
         {
-            if (fishInterfaceInstance != null)
-            {
-                Destroy(fishInterfaceInstance);
-            }
-
-            fishInterfaceInstance = Instantiate(fishInterfacePrefab, canvasParent, false);
-            fishInterfaceRect = fishInterfaceInstance.GetComponent<RectTransform>();
-            StartTransition(fishInterfaceRect, 1, -1);
+            SetPanelsActive(true);
+            StartTransition(fishOpenX, inventoryOpenX, false);
         }
-        else if (fishInterfaceInstance != null)
+        else
         {
-            StartTransition(fishInterfaceRect, -1, 1);
+            StartTransition(fishClosedX, inventoryClosedX, true);
         }
     }
 
-    private void StartTransition(RectTransform fishRect, int fishDir, int inventoryDir)
+    private void StartTransition(float targetFishX, float targetInventoryX, bool disableAfter)
     {
-        StopActiveCoroutines();
-        guiTransitionRoutine = StartCoroutine(RunBothTransitions(fishRect, fishDir, inventoryDir));
-    }
-
-    private void StopActiveCoroutines()
-    {
-        if (guiTransitionRoutine != null) StopCoroutine(guiTransitionRoutine);
-        if (fishRoutine != null) StopCoroutine(fishRoutine);
-        if (inventoryRoutine != null) StopCoroutine(inventoryRoutine);
-    }
-
-    private IEnumerator RunBothTransitions(RectTransform fishRect, int fishDir, int inventoryDir)
-    {
-        fishRoutine = StartCoroutine(SwitchGUI(fishRect, fishDir));
-        inventoryRoutine = StartCoroutine(SwitchGUI(inventory, inventoryDir));
-
-        yield return inventoryRoutine;
-
-        if (fishDir == -1 && fishInterfaceInstance != null)
+        if (guiTransitionRoutine != null)
         {
-            Destroy(fishInterfaceInstance);
-            fishInterfaceInstance = null;
-            fishInterfaceRect = null;
+            StopCoroutine(guiTransitionRoutine);
         }
+        guiTransitionRoutine = StartCoroutine(AnimatePanels(targetFishX, targetInventoryX, disableAfter));
+    }
+
+    private IEnumerator AnimatePanels(float targetFishX, float targetInventoryX, bool disableAfter)
+    {
+        while (!Mathf.Approximately(fishInterfaceRect.anchoredPosition.x, targetFishX) ||
+               !Mathf.Approximately(inventory.anchoredPosition.x, targetInventoryX))
+        {
+            MovePanelX(fishInterfaceRect, targetFishX);
+            MovePanelX(inventory, targetInventoryX);
+            yield return null;
+        }
+
+        fishInterfaceRect.anchoredPosition = new Vector2(targetFishX, fishInterfaceRect.anchoredPosition.y);
+        inventory.anchoredPosition = new Vector2(targetInventoryX, inventory.anchoredPosition.y);
+
+        if (disableAfter)
+        {
+            SetPanelsActive(false);
+        }
+
+        guiTransitionRoutine = null;
+    }
+
+    private void MovePanelX(RectTransform panel, float targetX)
+    {
+        float newX = Mathf.MoveTowards(panel.anchoredPosition.x, targetX, speed * Time.deltaTime);
+        panel.anchoredPosition = new Vector2(newX, panel.anchoredPosition.y);
+    }
+
+    private void SetPanelsActive(bool isActive)
+    {
+        fishInterfaceRect.gameObject.SetActive(isActive);
+        inventory.gameObject.SetActive(isActive);
     }
 
     public void SwitchActionMap()
@@ -95,26 +109,6 @@ public class FishGUI : InputManager
         else
         {
             GUIInputActionMap.Enable();
-        }
-    }
-
-    private IEnumerator SwitchGUI(RectTransform uiElement, int richting)
-    {
-        if (uiElement == null) yield break;
-
-        float startX = uiElement.anchoredPosition.x;
-        float targetX = startX + (uiElement.rect.width * richting);
-
-        while (uiElement != null && !Mathf.Approximately(uiElement.anchoredPosition.x, targetX))
-        {
-            float newX = Mathf.MoveTowards(uiElement.anchoredPosition.x, targetX, speed * Time.deltaTime);
-            uiElement.anchoredPosition = new Vector2(newX, uiElement.anchoredPosition.y);
-            yield return null;
-        }
-
-        if (uiElement != null)
-        {
-            uiElement.anchoredPosition = new Vector2(targetX, uiElement.anchoredPosition.y);
         }
     }
 }

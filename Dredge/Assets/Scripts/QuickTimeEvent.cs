@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ public class QuickTimeEvent : InputManager
     [SerializeField] private GameObject target;
 
     private FishManager fishManager;
+    private FishManager.QTELocation currentQTE;
 
     private float zoneStartAngle;
     private float zoneEndAngle;
@@ -20,21 +22,26 @@ public class QuickTimeEvent : InputManager
 
     private void Start()
     {
+        base.Start();
         fishManager = FindAnyObjectByType<FishManager>();
     }
 
+
     private void Update()
     {
-        if (targetPositions.Count < fishManager._fish[0].Locations.Length)
+        if(fishManager._fish.Length > 0)
         {
-            AddRandomTarget();
-        }
+            if (targetPositions.Count < fishManager._fish[0].Locations.Length)
+            {
+                AddRandomTarget();
+            }
 
-        currentAngle = (currentAngle + fishManager._fish[0].speed * Time.deltaTime) % 360f;
-        trigger.localEulerAngles = new Vector3(0f, 0f, -currentAngle);
-        if (hook.WasPressedThisFrame() && CheckForOverlap(currentAngle, currentAngle))
-        {
-            onHook?.Invoke();
+            currentAngle = (currentAngle + fishManager._fish[0].speed * Time.deltaTime) % 360f;
+            trigger.localEulerAngles = new Vector3(0f, 0f, -currentAngle);
+            if (hook.WasPressedThisFrame() && CheckForOverlap(currentAngle, currentAngle))
+            {
+                onHook?.Invoke();
+            }
         }
     }
 

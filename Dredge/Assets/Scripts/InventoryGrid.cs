@@ -33,7 +33,6 @@ public class InventoryGrid : MonoBehaviour
                     BoxCollider collider = squareObject.AddComponent<BoxCollider>();
                     collider.isTrigger = true;  
                 }
-                Debug.Log(grid[i, j]);
             }
         }
     }
