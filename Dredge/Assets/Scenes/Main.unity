@@ -918,6 +918,8 @@ MonoBehaviour:
       size: 20
     - location: 180
       size: 45
+    - location: 270
+      size: 45
 --- !u!4 &801402084
 Transform:
   m_ObjectHideFlags: 0
