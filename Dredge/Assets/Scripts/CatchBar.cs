@@ -4,13 +4,13 @@ public class CatchBar : MonoBehaviour
 {
     [SerializeField] private RectTransform hook;
     [SerializeField] private float speed = 5f;
+    [SerializeField] private RectTransform line;
 
     private QuickTimeEvent quickTimeEvent;
     private FishGUI fishGUI;
 
     private float maxY;
     private float minY;
-    private bool isCaught;
 
     private void OnDisable()
     {
@@ -33,17 +33,13 @@ public class CatchBar : MonoBehaviour
 
         RectTransform parentRect = hook.parent as RectTransform;
         maxY = parentRect.rect.yMax - (hook.rect.height * (1f - hook.pivot.y));
-        minY = parentRect.rect.yMin - (hook.rect.height * (1 - hook.pivot.y));
+        minY = parentRect.rect.yMin + (hook.rect.height * hook.pivot.y);
     }
 
     private void Update()
     {
-        //if (isCaught) return;
-
         if (hook.anchoredPosition.y >= maxY)
         {
-            isCaught = true;
-
             fishGUI.SetGUIState(false);
         }
         else
@@ -51,6 +47,9 @@ public class CatchBar : MonoBehaviour
             float newY = Mathf.MoveTowards(hook.anchoredPosition.y, maxY, speed * Time.deltaTime);
             hook.anchoredPosition = new Vector2(hook.anchoredPosition.x, newY);
         }
+
+        float distance = line.position.y - hook.position.y;
+        line.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Mathf.Max(0f, distance / line.lossyScale.y));
     }
 
     private void boostHook()
